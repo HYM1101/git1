@@ -1,0 +1,121 @@
+/**
+ * 主题覆盖层 —— 对齐原 demo HTML 政务深绿视觉（1:1 迁移要求）
+ *
+ * 原 HTML 设计规范（demo-pc-*.html）：
+ *   --brand: #1A5F2A（品牌绿）  --brand-dark: #0D3B1A（深绿）
+ *   --bg: #f0f3ee（页面底）     --surface: #fafbf8（卡片表面）
+ *   --ink: #1a1a2e（正文）      --muted: #6b7280（次要文字）
+ * 顶栏：深绿渐变（brand-dark → brand）；侧边栏：深色渐变；主区：浅绿灰底
+ *
+ * 覆盖策略：双类名/!important 提升优先级，压过页面 scoped 样式（主题层职责）
+ */
+@use 'variables' as *;
+
+// ── 1. Element Plus 主色变量 → 品牌绿 ──
+:root {
+  --el-color-primary: #1a5f2a;
+  --el-color-primary-light-3: #4a9d6a;
+  --el-color-primary-light-5: #74b68b;
+  --el-color-primary-light-7: #a8d2b4;
+  --el-color-primary-light-8: #c4e2cc;
+  --el-color-primary-light-9: #e8f5e9;
+  --el-color-primary-dark-2: #144a22;
+}
+
+// ── 2. 顶栏：深绿渐变 + 白字 ──
+.layout-header.layout-header {
+  background: linear-gradient(135deg, #0d3b1a 0%, #1a5f2a 55%, #2b7a4b 100%) !important;
+  border-bottom: none !important;
+  box-shadow: 0 2px 8px rgba(13, 59, 26, 0.25);
+
+  .title,
+  .header-left .title {
+    color: #ffffff !important;
+  }
+
+  .logo {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  }
+
+  .user-info,
+  .header-right .user-info {
+    color: rgba(255, 255, 255, 0.92) !important;
+
+    .el-icon {
+      color: rgba(255, 255, 255, 0.92) !important;
+    }
+  }
+}
+
+// ── 3. 侧边栏：深色渐变 + 菜单适配 ──
+.layout-sidebar.layout-sidebar {
+  background: linear-gradient(180deg, #0d3b1a 0%, #0a2a14 100%) !important;
+  border-right: none !important;
+
+  // 菜单深色主题
+  .el-menu {
+    --el-menu-bg-color: transparent;
+    --el-menu-text-color: rgba(255, 255, 255, 0.82);
+    --el-menu-active-color: #ffffff;
+    --el-menu-hover-bg-color: rgba(255, 255, 255, 0.1);
+    --el-menu-item-height: 46px;
+    background: transparent !important;
+    border-right: none !important;
+
+    .el-menu-item {
+      margin: 2px 8px;
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.82);
+
+      .el-icon {
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff;
+      }
+
+      &.is-active {
+        background: rgba(255, 255, 255, 0.16) !important;
+        color: #ffffff;
+        font-weight: 600;
+        box-shadow: inset 3px 0 0 #fdd835;
+      }
+    }
+  }
+}
+
+// ── 4. 主区：浅绿灰底（原 --bg: #f0f3ee） ──
+.layout-main.layout-main {
+  background: #f0f3ee !important;
+}
+
+// ── 5. 卡片：米白表面 + 柔和阴影（原 --surface） ──
+.el-card {
+  --el-card-border-color: #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(16, 42, 24, 0.06);
+}
+
+// ── 6. 表格：表头浅绿底 ──
+.el-table {
+  --el-table-header-bg-color: #eef5ee;
+  --el-table-header-text-color: #1a1a2e;
+  border-radius: 8px;
+
+  // 表头单元格直接设底色（覆盖按需引入下的默认 --el-fill-color-light）
+  th.el-table__cell {
+    background-color: #eef5ee !important;
+  }
+}
+
+// ── 7. 按钮圆角与主色联动 ──
+.el-button {
+  border-radius: 6px;
+}
+
+// ── 8. 分页激活色 ──
+.el-pagination.is-background .el-pager li.is-active {
+  background-color: var(--el-color-primary);
+}
