@@ -1,0 +1,52 @@
+# ---- 生态环境问题闭环管理系统 · 前端工程 ----
+
+# 依赖与构建产物
+node_modules/
+dist/
+coverage/
+*.local
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 日志
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 环境变量（含敏感信息的本地覆盖，勿提交）
+.env.local
+.env.*.local
+
+# E2E 测试（Playwright 浏览器与运行产物）
+.pw-browsers/
+test-results/
+playwright-report/
+blob-report/
+
+# 产物分析（visualizer）
+dist/stats.html
+
+# 类型生成产物（由脚本从 OpenAPI 生成，勿手改勿提交）
+src/types/api.d.ts
+src/auto-imports.d.ts
+src/components.d.ts
+
+# 编辑器冲突/备份残留（*.文件名.时间戳）
+*.2589055823
+*.1612742665
+*.2173296099

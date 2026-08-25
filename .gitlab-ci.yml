@@ -1,0 +1,134 @@
+# ── ec-frontend GitLab CI 流水线（CI-01 ~ CI-04） ──
+# 阶段：install → lint → typecheck → unit-test → build → deploy
+# 质量门禁：lint/typecheck/unit-test 任一失败即终止（默认行为）
+# 环境变量：CI_REGISTRY_* 由 GitLab Runner 注入；部署凭据放 CI/CD Variables
+
+stages:
+  - install
+  - lint
+  - typecheck
+  - unit-test
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: '22'
+  # 产物与缓存
+  NPM_CACHE: npm
+  # 部署镜像名（按实际仓库调整）
+  IMAGE: ${CI_REGISTRY}/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}
+
+# 公共配置：node 镜像 + 依赖缓存
+.base: &base
+  image: node:${NODE_VERSION}-alpine
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+      - .npm-cache/
+  before_script:
+    - npm config set cache .npm-cache --global
+    - npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+# ── install（依赖缓存预热） ──
+install:
+  <<: *base
+  stage: install
+  script:
+    - echo "依赖就绪（npm ci 已在 before_script 执行）"
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 day
+
+# ── lint（ESLint + Stylelint） ──
+lint:
+  <<: *base
+  stage: lint
+  script:
+    - npm run lint
+    - npm run lint:style
+
+# ── typecheck ──
+typecheck:
+  <<: *base
+  stage: typecheck
+  script:
+    - npm run typecheck
+
+# ── unit-test（Vitest + 覆盖率） ──
+unit-test:
+  <<: *base
+  stage: unit-test
+  script:
+    - npm run test:unit:coverage
+  coverage: '/All files.*?(\d+\.\d+)% Stmts/'
+  artifacts:
+    paths:
+      - coverage/
+    expire_in: 7 days
+
+# ── build（产物留档） ──
+build:
+  <<: *base
+  stage: build
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 7 days
+
+# ── E2E（黄金链路 5 条，基于 mock 内联构建产物 + preview 静态服务） ──
+e2e:
+  <<: *base
+  stage: build
+  script:
+    # E2E 依赖 mock 数据（VITE_MOCK=true 内联构建，preview 模式服务）
+    - VITE_MOCK=true npm run build
+    - npx playwright install chromium
+    - npm run test:e2e
+  artifacts:
+    paths:
+      - test-results/
+    when: always
+    expire_in: 7 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+
+# ── 测试环境自动部署（CI-03：merge develop 后触发） ──
+deploy-test:
+  stage: deploy
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - docker build -t ${IMAGE} .
+    - docker push ${IMAGE}
+    # 测试机部署（按实际环境替换）
+    - docker compose -f docker-compose.yml up -d --force-recreate web
+  environment:
+    name: test
+    url: http://test.example.gov.cn
+  only:
+    - develop
+
+# ── 生产手动门禁（CI-04：release 分支 + 手动触发 + 审批） ──
+deploy-prod:
+  stage: deploy
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - docker build -t ${IMAGE} .
+    - docker push ${IMAGE}
+    - echo "生产部署（人工确认后执行）"
+  environment:
+    name: production
+    url: https://ec.example.gov.cn
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^release\//'
+  allow_failure: false

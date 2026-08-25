@@ -1,0 +1,25 @@
+# ── 测试环境部署（CI-03，Docker Compose 起步） ──
+# 使用：docker compose up -d
+# 说明：前端静态托管 + 后端网关（占位服务名，与后端工程对接时调整）
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ec-frontend-web
+    ports:
+      - '8080:80'
+    restart: unless-stopped
+
+  # 后端网关占位（后端工程就绪后替换为真实服务）
+  backend-gateway:
+    image: nginx:1.27-alpine
+    container_name: ec-backend-gateway
+    restart: unless-stopped
+    volumes:
+      - ./docker/gateway.conf:/etc/nginx/conf.d/default.conf:ro
+
+networks:
+  default:
+    name: ec-network

@@ -1,0 +1,23 @@
+{
+  "extends": ["stylelint-config-standard-scss", "stylelint-config-recess-order"],
+  "rules": {
+    "scss/dollar-variable-pattern": null,
+    "selector-class-pattern": null,
+    "no-descending-specificity": null,
+    "color-function-notation": "modern",
+    "alpha-value-notation": null,
+    "declaration-block-single-line-max-declarations": null,
+    "order/properties-order": [null, { "severity": "warning" }],
+    "selector-pseudo-class-no-unknown": [true, { "ignorePseudoClasses": ["deep", "global"] }]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.scss"],
+      "customSyntax": "postcss-scss"
+    },
+    {
+      "files": ["**/*.vue"],
+      "customSyntax": "postcss-html"
+    }
+  ]
+}
