@@ -1,0 +1,7 @@
+# 指挥大屏（sc-datav / demo4-standalone）本地忽略规则
+# 与父仓库 ec-frontend 的 .gitignore 叠加生效
+
+node_modules/
+dist/
+*.log
+.trae/

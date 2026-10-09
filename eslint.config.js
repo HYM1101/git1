@@ -7,7 +7,9 @@ import prettierConfig from 'eslint-config-prettier'
 import globals from 'globals'
 
 export default [
-  { ignores: ['dist/**', 'node_modules/**', 'coverage/**'] },
+  // demo4-standalone 为独立 React 子项目，自带 eslint 体系（其目录内 eslint.config.js），
+  // 根仓库的 pre-commit/eslint 不对其文件生效，避免两套配置互相污染
+  { ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'demo4-standalone/**'] },
   js.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
   // .vue 文件：vue-eslint-parser 解析模板，内嵌 TS 用 tsParser
