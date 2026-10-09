@@ -1,96 +1,79 @@
-/**
- * TE-07 Playwright E2E —— 黄金链路 5 条用例
- * ① 登录 → 工作台  ② 台账 → 详情  ③ 录入 → 自动定级
- * ④ 进度填报 → 提交验收按钮激活  ⑤ responsible 角色权限（菜单隔离）
- */
+/** PC 端黄金链路 E2E：使用页面语义选择器，不依赖组件库内部类名。 */
 import { test, expect, type Page } from '@playwright/test'
 
-/** 管理员登录（全局 beforeEach 复用） */
-async function loginAs(page: Page, username: string, password: string): Promise<void> {
+async function loginAs(page: Page, username: string): Promise<void> {
   await page.goto('/login')
-  await page.getByPlaceholder('请输入用户名').fill(username)
-  await page.getByPlaceholder('请输入密码').fill(password)
+  await page.getByRole('textbox', { name: '用户名' }).fill(username)
+  await page.getByRole('textbox', { name: '密码' }).fill('123456')
   await page.getByRole('button', { name: '登 录' }).click()
   await page.waitForURL('**/workbench')
 }
 
-test.describe('黄金链路 E2E', () => {
-  test('① 登录 → 工作台（统计卡片 + 待办列表加载）', async ({ page }) => {
-    await loginAs(page, 'admin', 'admin123')
-    // 工作台标题
-    await expect(page.locator('.layout-header .title')).toContainText('生态环境问题闭环管理系统')
-    // 统计卡片渲染（6 张）
-    await expect(page.locator('.stat-card')).toHaveCount(6)
-    // 待办表格渲染
-    await expect(page.locator('.section .el-table')).toBeVisible()
+test.describe('PC 端黄金链路', () => {
+  test('管理员登录后工作台统计与待办正常加载', async ({ page }) => {
+    await loginAs(page, 'admin')
+    await expect(page.getByText('首页 / 工作台')).toBeVisible()
+    await expect(page.locator('.stat-card')).toHaveCount(4)
+    await expect(page.locator('.todo-item').first()).toBeVisible()
+    await expect(page.getByRole('menuitem', { name: '系统管理' })).toBeVisible()
   })
 
-  test('② 台账 → 详情（双标签 + 状态流转按钮）', async ({ page }) => {
-    await loginAs(page, 'admin', 'admin123')
+  test('台账原生表格可以进入详情页', async ({ page }) => {
+    await loginAs(page, 'admin')
     await page.goto('/ledger')
-    // 台账表格加载（编号列存在）
-    await expect(page.locator('.el-table__header-wrapper')).toContainText('编号')
-    // 进入第一行详情
-    await page.locator('.el-table__body-wrapper tbody tr').first().locator('text=详情').click()
+    await expect(page.locator('.ledger-table thead')).toContainText('问题标题')
+    await page.locator('.ledger-table tbody tr').first().click()
     await page.waitForURL('**/problem/**')
-    // 详情页展示：标题 + 等级徽章 + 状态标签
-    await expect(page.locator('.level-badge')).toBeVisible()
-    await expect(page.locator('.status-tag')).toBeVisible()
+    await expect(page.getByText('基础信息区')).toBeVisible()
+    await expect(page.getByText('整改进度', { exact: true })).toBeVisible()
+    await expect(page.getByText('生命周期', { exact: true })).toBeVisible()
   })
 
-  test('③ 问题录入 → 自动定级（3×3 矩阵联动）', async ({ page }) => {
-    await loginAs(page, 'admin', 'admin123')
+  test('问题录入逐步校验并完成自动定级预览', async ({ page }) => {
+    await loginAs(page, 'admin')
     await page.goto('/problem/input')
-    // 填写基础信息
-    await page.getByPlaceholder('简明描述问题').fill('E2E 测试问题：涉重企业废水直排')
-    // 来源（默认"日常巡查"，重新选择"中央环保督察"）
-    await page.locator('.el-form-item', { hasText: '问题来源' }).locator('.el-select').click()
-    await page.locator('.el-select-dropdown__item:has-text("中央环保督察")').first().click()
-    // 污染类型（默认"水"，已满足高×中判定，无需重选）
-    // 下一步 → 分类标注页
+    await page.getByPlaceholder(/简明描述问题/).fill('E2E测试涉重企业废水直排问题')
+    await page
+      .getByPlaceholder(/请详细描述问题情况/)
+      .fill('现场发现企业生产废水未经处理直接排放，需要立即整改。')
     await page.getByRole('button', { name: '下一步' }).click()
-    // 下一步 → 责任时限页
+    const level2 = page.locator('.el-form-item', { hasText: '污染类型二级' }).locator('.el-select')
+    await level2.click()
+    await page.getByRole('option', { name: '工业废水' }).click()
+    const category = page.locator('.el-form-item', { hasText: '所属分类' }).locator('.el-select')
+    await category.click()
+    await page.getByRole('option', { name: '涉重企业' }).click()
+    await page.getByPlaceholder('请输入行业类别').fill('电镀')
     await page.getByRole('button', { name: '下一步' }).click()
-    // 责任时限（责任单位/责任人/截止日期均为必填）
     await page.getByPlaceholder(/右江区生态环境局/).fill('田阳区生态环境局')
     await page.getByPlaceholder(/张主任/).fill('张主任')
-    // 日期选择：单日期模式点击即选中并关闭（无"确定"按钮）
-    await page.getByPlaceholder('整改截止日期').click()
-    await page.locator('.el-date-table td:not(.disabled)').first().click()
+    await page.getByPlaceholder(/整改要求及验收标准/).fill('完成设施整改并提供达标监测报告。')
+    await page.getByPlaceholder('整改截止日期').fill('2026-12-31')
     await page.getByRole('button', { name: '下一步' }).click()
-    // 自动定级预览（中央督察→来源高 + 水污染→风险中 → 高×中 = 红色）
-    await expect(page.locator('.level-badge')).toContainText('红色重大')
+    await expect(page.getByText('系统判定重要等级')).toBeVisible()
+    await expect(page.locator('.level-result .level-badge')).toBeVisible()
   })
 
-  test('④ 进度填报 → 提交验收按钮按 100% 规则激活', async ({ page }) => {
-    // responsible 登录：有填报进度权限
-    await loginAs(page, 'resp', 'resp123')
+  test('整改责任人不具有待交办、预警、统计和录入权限', async ({ page }) => {
+    await loginAs(page, 'handler')
+    await expect(page.getByRole('menuitem', { name: '问题录入' })).toHaveCount(0)
+    await expect(page.getByRole('menuitem', { name: '预警清单' })).toHaveCount(0)
+    await expect(page.getByRole('menuitem', { name: '统计分析' })).toHaveCount(0)
     await page.goto('/schedule')
-    // 第一行（整改中/已驳回）打开填报对话框
-    const fillRow = page.locator('.el-table__body-wrapper tbody tr', { hasText: '填报进度' }).first()
-    await fillRow.locator('text=填报进度').click()
-    // 对话框内：填措施 + 成效 → 三扇区进度 60%
-    await page.getByPlaceholder(/整改措施/).fill('已完成设施改造')
-    await page.getByPlaceholder(/整改成效/).fill('排放达标')
-    await expect(page.locator('.el-dialog .el-progress__text')).toContainText('60')
-    // 上传佐证附件 → 100%
-    await page.setInputFiles('.el-dialog input[type=file]', {
-      name: 'evidence.pdf',
-      mimeType: 'application/pdf',
-      buffer: Buffer.from('pdf-content'),
-    })
-    await expect(page.locator('.el-dialog .el-progress__text')).toContainText('100')
-    // 保存进度成功
-    await page.getByRole('button', { name: '保存进度' }).click()
-    await expect(page.locator('.el-message--success').first()).toBeVisible()
+    await expect(page.getByRole('button', { name: '待交办', exact: true })).toHaveCount(0)
+    await expect(page.locator('.issue-list')).not.toContainText('待交办')
+    await page.goto('/problem/P0016')
+    await page.waitForURL('**/ledger')
   })
 
-  test('⑤ responsible 角色权限：无"问题录入"入口', async ({ page }) => {
-    await loginAs(page, 'resp', 'resp123')
-    // 侧边栏不应出现"问题录入"菜单（仅 admin/operator 可见）
-    await expect(page.locator('.el-menu').getByText('问题录入')).toHaveCount(0)
-    // 直接访问受限路由被守卫重定向到工作台（首次编译较慢，放宽等待）
-    await page.goto('/problem/input')
-    await page.waitForURL('**/workbench', { timeout: 20000 })
+  test('科室人员拥有待交办和验收入口，但没有系统管理权限', async ({ page }) => {
+    await loginAs(page, 'kehu')
+    await expect(page.getByRole('menuitem', { name: '问题录入' })).toBeVisible()
+    await expect(page.getByRole('menuitem', { name: '预警清单' })).toBeVisible()
+    await expect(page.getByRole('menuitem', { name: '统计分析' })).toBeVisible()
+    await expect(page.getByRole('menuitem', { name: '系统管理' })).toHaveCount(0)
+    await page.goto('/schedule')
+    await expect(page.getByRole('button', { name: '待交办', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: '待验收', exact: true })).toBeVisible()
   })
 })

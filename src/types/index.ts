@@ -41,12 +41,20 @@ export interface Problem {
   id: string
   problemNo: string
   title: string
+  /** 问题详细内容（录入页“问题内容”） */
+  content?: string
+  discoveredDate?: string
   source: string
   regionCode: string
   regionName: string
   pollutionType: string
   /** 问题类别（对应 8 类判定对象：涉重企业/尾矿库/矿山/水源保护区/供水厂/垃圾填埋场/散乱污等，用于风险等级推断） */
   category?: string
+  /** 行业类别（原型已有，后端未返回时允许为空） */
+  industry?: string
+  entityName?: string
+  requirements?: string
+  address?: string
   responsibleUnit?: string
   responsiblePerson?: string
   deadline: string
@@ -59,6 +67,10 @@ export interface Problem {
   overdueDays: number
   status: ProblemStatus
   progress: number
+  /** 最近一次进度填报内容 */
+  measures?: string
+  effect?: string
+  progressAttachments?: { name: string; size: number }[]
   riskTags: string[]
   lng?: number
   lat?: number

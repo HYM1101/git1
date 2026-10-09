@@ -37,6 +37,7 @@ Thumbs.db
 test-results/
 playwright-report/
 blob-report/
+artifacts/visual-compare/
 
 # 产物分析（visualizer）
 dist/stats.html

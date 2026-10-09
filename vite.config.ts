@@ -67,7 +67,8 @@ export default defineConfig({
         manualChunks(id: string) {
           if (!id.includes('node_modules')) return undefined
           if (id.includes('echarts')) return 'vendor-echarts'
-          if (id.includes('/vue/') || id.includes('vue-router') || id.includes('pinia')) return 'vendor-vue'
+          if (id.includes('/vue/') || id.includes('vue-router') || id.includes('pinia'))
+            return 'vendor-vue'
           if (id.includes('axios')) return 'vendor-http'
           return undefined
         },

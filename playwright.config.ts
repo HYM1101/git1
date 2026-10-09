@@ -1,6 +1,6 @@
 /**
  * Playwright E2E 配置
- * 服务方式：preview 静态服务构建产物（VITE_MOCK=true 内联，见 scripts/e2e 说明）
+ * 服务方式：test:e2e 先生成 development 模式静态产物，再由 preview 提供服务。
  * 说明：本沙箱环境下 vite dev 的依赖优化清理会触发进程崩溃，故 E2E 基于构建产物运行
  * 浏览器基线：本机 Edge（msedge channel）
  */

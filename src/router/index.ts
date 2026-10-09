@@ -29,6 +29,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '问题台账' },
   },
   {
+    path: '/files',
+    name: 'FileManagement',
+    component: () => import('@/views/files/FileManagement.vue'),
+    meta: { title: '文件管理' },
+  },
+  {
     path: '/problem/input',
     name: 'ProblemInput',
     component: () => import('@/views/problem/ProblemInput.vue'),
