@@ -49,17 +49,21 @@ export const gisApi = {
 /** 统计分析 API */
 export const analysisApi = {
   /** 综合态势指标 */
-  getOverview: () => request.get<unknown, Record<string, number>>('/analysis/overview'),
+  getOverview: (params: Record<string, unknown> = {}) =>
+    request.get<unknown, Record<string, number>>('/analysis/overview', { params }),
 
   /** 重要等级分布 */
-  getLevelDistribution: () => request.get<unknown, Record<string, number>>('/analysis/level'),
+  getLevelDistribution: (params: Record<string, unknown> = {}) =>
+    request.get<unknown, Record<string, number>>('/analysis/level', { params }),
 
   /** 预警等级分布 */
-  getWarningDistribution: () => request.get<unknown, Record<string, number>>('/analysis/warning'),
+  getWarningDistribution: (params: Record<string, unknown> = {}) =>
+    request.get<unknown, Record<string, number>>('/analysis/warning', { params }),
 
   /** 整改趋势 */
   getTrend: () => request.get<unknown, unknown[]>('/analysis/trend'),
 
   /** 区域排名 */
-  getRank: () => request.get<unknown, unknown[]>('/analysis/rank'),
+  getRank: (params: Record<string, unknown> = {}) =>
+    request.get<unknown, unknown[]>('/analysis/rank', { params }),
 }

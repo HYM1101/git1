@@ -3,7 +3,7 @@
  *
  * 依据：概要设计 4.2（问题全生命周期流程）+ demo-flow.js STATUS_MAP。
  * 状态：待交办 → 整改中 → 待验收 → 已销号（终态）
- *                ↘ 已驳回（可回整改中）
+ *                ↘ 验收驳回后直接返回整改中
  * 非法流转一律拒绝（如已销号不可再驳回、待交办不可直接销号）。
  */
 
@@ -26,7 +26,8 @@ export const STATUS_LABELS: Record<ProblemStatus, string> = {
 const TRANSITION_TABLE: Record<ProblemStatus, Partial<Record<ProblemAction, ProblemStatus>>> = {
   pending: { assign: 'inProgress' },
   inProgress: { submit: 'verify' },
-  verify: { accept: 'closed', reject: 'rejected' },
+  verify: { accept: 'closed', reject: 'inProgress' },
+  // 兼容历史“已驳回”数据；新流程不再产生该中间状态。
   rejected: { rework: 'inProgress' },
   closed: {},
 }

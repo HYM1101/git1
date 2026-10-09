@@ -23,8 +23,8 @@ export const problemApi = {
   create: (data: Partial<Problem>) => request.post<unknown, Problem>('/problems', data),
 
   /** 问题状态流转 */
-  transition: (id: string, action: string) =>
-    request.post<unknown, Problem>(`/problems/${id}/${action}`),
+  transition: (id: string, action: string, data?: Record<string, unknown>) =>
+    request.post<unknown, Problem>(`/problems/${id}/${action}`, data),
 
   /** 提交进度（三扇区 + 可选阶段勾选） */
   submitProgress: (

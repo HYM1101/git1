@@ -12,6 +12,8 @@ export const useProblemStore = defineStore('problem', () => {
   const total = ref(0)
   const loading = ref(false)
   const currentDetail = ref<Problem | null>(null)
+  let listRequestId = 0
+  let detailRequestId = 0
 
   const query = reactive<ProblemQuery>({
     page: 1,
@@ -26,18 +28,22 @@ export const useProblemStore = defineStore('problem', () => {
 
   // ── Actions ──
   async function fetchList(): Promise<void> {
+    const requestId = ++listRequestId
     loading.value = true
     try {
       const result: PageResult<Problem> = await problemApi.getList({ ...query })
+      if (requestId !== listRequestId) return
       list.value = result.list
       total.value = result.total
     } finally {
-      loading.value = false
+      if (requestId === listRequestId) loading.value = false
     }
   }
 
   async function fetchDetail(id: string): Promise<void> {
-    currentDetail.value = await problemApi.getDetail(id)
+    const requestId = ++detailRequestId
+    const result = await problemApi.getDetail(id)
+    if (requestId === detailRequestId) currentDetail.value = result
   }
 
   function resetQuery(): void {
@@ -55,6 +61,20 @@ export const useProblemStore = defineStore('problem', () => {
     query.page = page
   }
 
+  /** 录入成功后立即同步当前台账缓存，避免返回列表时出现旧数据。 */
+  function addCreatedProblem(problem: Problem): void {
+    list.value = [problem, ...list.value.filter((item) => item.id !== problem.id)]
+    total.value += 1
+    query.page = 1
+  }
+
+  function removeProblems(ids: string[]): void {
+    const idSet = new Set(ids)
+    const removed = list.value.filter((item) => idSet.has(item.id)).length
+    list.value = list.value.filter((item) => !idSet.has(item.id))
+    total.value = Math.max(0, total.value - removed)
+  }
+
   return {
     list,
     total,
@@ -65,5 +85,7 @@ export const useProblemStore = defineStore('problem', () => {
     fetchDetail,
     resetQuery,
     setPage,
+    addCreatedProblem,
+    removeProblems,
   }
 })

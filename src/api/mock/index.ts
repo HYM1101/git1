@@ -74,7 +74,7 @@ export function setupMock(instance: AxiosInstance): void {
     if (tokenMatch) {
       const user = mockUsers.find((u) => u.id === Number(tokenMatch[1]))
       if (user?.role === 'responsible' && user.regionCode) {
-        list = list.filter((p) => p.regionCode === user.regionCode)
+        list = list.filter((p) => p.regionCode === user.regionCode && p.status !== 'pending')
       }
     }
 
@@ -91,13 +91,7 @@ export function setupMock(instance: AxiosInstance): void {
       )
     }
 
-    // 排序：预警等级优先 > 超期天数降序
-    const warningOrder = { red: 0, orange: 1, yellow: 2, green: 3 }
-    list.sort((a, b) => {
-      const w = warningOrder[a.warningLevel] - warningOrder[b.warningLevel]
-      if (w !== 0) return w
-      return b.overdueDays - a.overdueDays
-    })
+    // 保持种子录入顺序，确保列表、详情与 HTML 原型使用同一固定验收状态。
 
     const page = Number(params.page) || 1
     const pageSize = Number(params.pageSize) || 20
@@ -108,6 +102,15 @@ export function setupMock(instance: AxiosInstance): void {
     const id = config.url?.split('/').pop()
     const problem = mockProblems.find((p) => p.id === id)
     if (!problem) return [404, ok(null as never)]
+    const auth = config.headers?.Authorization as string
+    const tokenMatch = auth?.match(/mock-token-(\d+)/)
+    const user = tokenMatch ? mockUsers.find((item) => item.id === Number(tokenMatch[1])) : null
+    if (
+      user?.role === 'responsible' &&
+      (problem.status === 'pending' || problem.regionCode !== user.regionCode)
+    ) {
+      return [403, { code: 403, message: '该问题尚未交办或不属于当前责任范围', data: null }]
+    }
     return [200, ok(problem)]
   })
 
@@ -118,10 +121,17 @@ export function setupMock(instance: AxiosInstance): void {
       id,
       problemNo: `BS-2026-${id.slice(1)}`,
       title: body.title || '未命名问题',
+      content: body.content,
+      discoveredDate: body.discoveredDate,
       source: body.source || '日常巡查',
-      regionCode: body.regionCode || '451000',
+      regionCode: body.regionCode || '451002',
       regionName: body.regionName || '右江区',
       pollutionType: body.pollutionType || '水',
+      category: body.category,
+      industry: body.industry,
+      entityName: body.entityName,
+      requirements: body.requirements,
+      address: body.address,
       responsibleUnit: body.responsibleUnit,
       responsiblePerson: body.responsiblePerson,
       deadline: body.deadline || new Date().toISOString().slice(0, 10),
@@ -150,65 +160,101 @@ export function setupMock(instance: AxiosInstance): void {
     return [200, ok(newProblem)]
   })
 
-  mock
-    .onPost(/\/problems\/[^/]+\/(assign|progress|submit|accept|reject|rework)$/)
-    .reply((config) => {
-      const parts = config.url?.split('/')
-      const id = parts?.[2]
-      const action = parts?.[3] ?? ''
-      const problem = mockProblems.find((p) => p.id === id)
-      if (!problem) return [404, ok(null as never)]
-      // 简化流转映射
-      const actionToStatus: Record<string, Problem['status']> = {
-        assign: 'inProgress',
-        submit: 'verify',
-        accept: 'closed',
-        reject: 'rejected',
-        rework: 'inProgress',
-      }
-      if (actionToStatus[action]) {
-        problem.status = actionToStatus[action]
-        if (action === 'accept') problem.progress = 100
-        if (action === 'submit') problem.completedPhases = [0, 1, 2, 3, 4]
-      }
-      // 追加生命周期时间线（留痕）
-      const descMap: Record<string, string> = {
-        assign: '下发责任单位',
-        submit: '提交验收申请',
-        accept: '验收通过，销号',
-        reject: '验收驳回，退回整改',
-        rework: '重新整改',
-      }
-      const userMap: Record<string, string> = {
-        assign: '市局',
-        submit: '责任单位',
-        accept: '市局',
-        reject: '市局',
-        rework: '责任单位',
-      }
-      if (descMap[action]) {
-        problem.timeline = [
-          ...(problem.timeline || []),
-          {
-            time: new Date().toLocaleString('zh-CN', { hour12: false }),
-            action: action.toUpperCase(),
-            desc: descMap[action],
-            user: userMap[action],
-          },
-        ]
-      }
-      return [200, ok(problem)]
-    })
+  mock.onPost(/\/problems\/[^/]+\/(assign|submit|accept|reject|rework)$/).reply((config) => {
+    const parts = config.url?.split('/')
+    const id = parts?.[2]
+    const action = parts?.[3] ?? ''
+    const problem = mockProblems.find((p) => p.id === id)
+    if (!problem) return [404, ok(null as never)]
+    const auth = config.headers?.Authorization as string
+    const tokenMatch = auth?.match(/mock-token-(\d+)/)
+    const user = tokenMatch ? mockUsers.find((item) => item.id === Number(tokenMatch[1])) : null
+    const allowedRoles: Record<string, string[]> = {
+      assign: ['admin', 'operator'],
+      submit: ['admin', 'responsible'],
+      accept: ['admin', 'operator'],
+      reject: ['admin', 'operator'],
+      rework: ['admin', 'operator', 'responsible'],
+    }
+    if (!user || !allowedRoles[action]?.includes(user.role)) {
+      return [403, { code: 403, message: '当前角色无权执行该操作', data: null }]
+    }
+    const allowedFrom: Record<string, Problem['status'][]> = {
+      assign: ['pending'],
+      submit: ['inProgress'],
+      accept: ['verify'],
+      reject: ['verify'],
+      rework: ['rejected'],
+    }
+    if (!allowedFrom[action]?.includes(problem.status)) {
+      return [409, { code: 409, message: `当前状态不允许执行 ${action}`, data: null }]
+    }
+    if (action === 'assign' && !problem.responsibleUnit?.trim()) {
+      return [422, { code: 422, message: '请先配置责任单位后再下发', data: null }]
+    }
+    // 驳回即退回整改；rework 仅用于兼容历史数据。
+    const actionToStatus: Record<string, Problem['status']> = {
+      assign: 'inProgress',
+      submit: 'verify',
+      accept: 'closed',
+      reject: 'inProgress',
+      rework: 'inProgress',
+    }
+    if (actionToStatus[action]) {
+      problem.status = actionToStatus[action]
+      if (action === 'accept') problem.progress = 100
+      if (action === 'submit') problem.completedPhases = [0, 1, 2, 3, 4]
+    }
+    // 追加生命周期时间线（留痕）
+    const descMap: Record<string, string> = {
+      assign: '下发责任单位',
+      submit: '提交验收申请',
+      accept: '验收通过，销号',
+      reject: '验收驳回，退回整改',
+      rework: '重新整改',
+    }
+    const userMap: Record<string, string> = {
+      assign: '市局',
+      submit: '责任单位',
+      accept: '市局',
+      reject: '市局',
+      rework: '责任单位',
+    }
+    if (descMap[action]) {
+      problem.timeline = [
+        ...(problem.timeline || []),
+        {
+          time: new Date().toLocaleString('zh-CN', { hour12: false }),
+          action: action.toUpperCase(),
+          desc: descMap[action],
+          user: userMap[action],
+        },
+      ]
+    }
+    return [200, ok(problem)]
+  })
 
   mock.onPost(/\/problems\/[^/]+\/progress$/).reply((config) => {
     const id = config.url?.split('/')[2]
     const body = JSON.parse(config.data)
     const problem = mockProblems.find((p) => p.id === id)
     if (!problem) return [404, ok(null as never)]
+    const auth = config.headers?.Authorization as string
+    const tokenMatch = auth?.match(/mock-token-(\d+)/)
+    const user = tokenMatch ? mockUsers.find((item) => item.id === Number(tokenMatch[1])) : null
+    if (!user || !['admin', 'responsible'].includes(user.role)) {
+      return [403, { code: 403, message: '当前角色无权填报整改进度', data: null }]
+    }
+    if (!['inProgress', 'rejected'].includes(problem.status)) {
+      return [409, { code: 409, message: '问题尚未下发或当前状态不可填报进度', data: null }]
+    }
     // 三扇区进度更新 + 阶段勾选记录
     if (body.measures) problem.progress = Math.max(problem.progress, 30)
     if (body.effect) problem.progress = Math.max(problem.progress, 60)
     if (body.attachments?.length) problem.progress = 100
+    problem.measures = body.measures || ''
+    problem.effect = body.effect || ''
+    problem.progressAttachments = Array.isArray(body.attachments) ? body.attachments : []
     if (Array.isArray(body.completedPhases)) problem.completedPhases = body.completedPhases
     // 进度留痕
     problem.timeline = [
@@ -235,28 +281,23 @@ export function setupMock(instance: AxiosInstance): void {
   // ── 预警清单（含筛选）──
   mock.onGet('/warnings').reply((config) => {
     const params = config.params || {}
-    let list = mockProblems
-      .filter((p) => p.warningLevel !== 'green') // 仅预警问题
-      .map((p) => ({
-        id: p.id,
-        problemNo: p.problemNo,
-        title: p.title,
-        warningLevel: p.warningLevel,
-        overdueDays: p.overdueDays,
-        responsibleUnit: p.responsibleUnit,
-        responsiblePerson: p.responsiblePerson,
-        deadline: p.deadline,
-        status: p.status,
-        urged: false,
-        supervised: false,
-      }))
+    let list = mockProblems.map((p) => ({
+      id: p.id,
+      problemNo: p.problemNo,
+      title: p.title,
+      importantLevel: p.importantLevel,
+      regionName: p.regionName,
+      warningLevel: p.warningLevel,
+      overdueDays: p.overdueDays,
+      responsibleUnit: p.responsibleUnit,
+      responsiblePerson: p.responsiblePerson,
+      deadline: p.deadline,
+      createdAt: p.createdAt,
+      status: p.status,
+      urged: false,
+      supervised: false,
+    }))
     if (params.warningLevel) list = list.filter((w) => w.warningLevel === params.warningLevel)
-    const warningOrder: Record<string, number> = { red: 0, orange: 1, yellow: 2 }
-    list.sort((a, b) => {
-      const w = (warningOrder[a.warningLevel] ?? 3) - (warningOrder[b.warningLevel] ?? 3)
-      if (w !== 0) return w
-      return b.overdueDays - a.overdueDays
-    })
     const page = Number(params.page) || 1
     const pageSize = Number(params.pageSize) || 20
     return [200, ok(paginate(list, page, pageSize))]
@@ -267,25 +308,23 @@ export function setupMock(instance: AxiosInstance): void {
     return [
       200,
       ok({
-        total: mockProblems.length,
-        pending: mockProblems.filter((p) => p.status === 'pending').length,
-        inProgress: mockProblems.filter((p) => p.status === 'inProgress').length,
-        verify: mockProblems.filter((p) => p.status === 'verify').length,
-        closed: mockProblems.filter((p) => p.status === 'closed').length,
-        overdue: mockProblems.filter((p) => p.overdueDays > 0).length,
+        total: 42,
+        pending: 8,
+        inProgress: 18,
+        verify: 3,
+        closed: 13,
+        overdue: 7,
       }),
     ]
   })
 
   mock.onGet('/analysis/level').reply(() => {
-    const stats = { red: 0, orange: 0, green: 0 }
-    mockProblems.forEach((p) => stats[p.importantLevel]++)
+    const stats = { red: 7, orange: 33, green: 2 }
     return [200, ok(stats)]
   })
 
   mock.onGet('/analysis/warning').reply(() => {
-    const stats = { red: 0, orange: 0, yellow: 0, green: 0 }
-    mockProblems.forEach((p) => stats[p.warningLevel]++)
+    const stats = { red: 5, orange: 2, yellow: 3, green: 32 }
     return [200, ok(stats)]
   })
 
@@ -330,16 +369,32 @@ export function setupMock(instance: AxiosInstance): void {
   })
 
   // ── GIS ──
-  mock.onGet('/gis/points').reply(() => {
+  mock.onGet('/gis/points').reply((config) => {
+    const auth = config.headers?.Authorization as string
+    const tokenMatch = auth?.match(/mock-token-(\d+)/)
+    const user = tokenMatch ? mockUsers.find((item) => item.id === Number(tokenMatch[1])) : null
+    const visibleProblems =
+      user?.role === 'responsible' && user.regionCode
+        ? mockProblems.filter(
+            (problem) => problem.regionCode === user.regionCode && problem.status !== 'pending',
+          )
+        : mockProblems
     return [
       200,
       ok(
-        mockProblems.map((p) => ({
+        visibleProblems.map((p) => ({
           id: p.id,
           lng: p.lng,
           lat: p.lat,
           level: p.importantLevel,
+          warningLevel: p.warningLevel,
           title: p.title,
+          area: p.regionName,
+          type: p.pollutionType,
+          status: p.status,
+          deadline: p.deadline,
+          overdueDays: p.overdueDays,
+          progress: p.progress,
         })),
       ),
     ]

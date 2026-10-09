@@ -21,8 +21,8 @@ describe('transition — 合法状态流转', () => {
   it('待验收 → 已销号 (accept)', () => {
     expect(transition('verify', 'accept')).toBe('closed')
   })
-  it('待验收 → 已驳回 (reject)', () => {
-    expect(transition('verify', 'reject')).toBe('rejected')
+  it('待验收 → 整改中 (reject)', () => {
+    expect(transition('verify', 'reject')).toBe('inProgress')
   })
   it('已驳回 → 整改中 (rework)', () => {
     expect(transition('rejected', 'rework')).toBe('inProgress')

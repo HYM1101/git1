@@ -34,6 +34,7 @@ const global = {
       props: ['limit', 'accept', 'file-list'],
     },
     'el-button': { template: '<button><slot /></button>' },
+    'el-icon': { template: '<span class="el-icon-stub"><slot /></span>' },
   },
 }
 
