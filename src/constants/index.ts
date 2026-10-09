@@ -75,16 +75,32 @@ export const PROBLEM_SOURCES = [
  * code 为行政区划编码，name 为展示名
  */
 export const REGIONS: ReadonlyArray<{ code: string; name: string }> = [
-  { code: '451000', name: '右江区' },
-  { code: '451002', name: '田阳区' },
-  { code: '451003', name: '田林县' },
-  { code: '451022', name: '隆林县' },
-  { code: '451023', name: '西林县' },
-  { code: '451024', name: '凌云县' },
-  { code: '451025', name: '乐业县' },
-  { code: '451026', name: '平果市' },
-  { code: '451027', name: '德保县' },
-  { code: '451028', name: '靖西市' },
-  { code: '451029', name: '那坡县' },
-  { code: '451030', name: '田东县' },
+  { code: '451002', name: '右江区' },
+  { code: '451003', name: '田阳区' },
+  { code: '451022', name: '田东县' },
+  { code: '451024', name: '德保县' },
+  { code: '451026', name: '那坡县' },
+  { code: '451027', name: '凌云县' },
+  { code: '451028', name: '乐业县' },
+  { code: '451029', name: '田林县' },
+  { code: '451030', name: '西林县' },
+  { code: '451031', name: '隆林县' },
+  { code: '451081', name: '靖西市' },
+  { code: '451082', name: '平果市' },
 ]
+
+/** 百色市 12 县（市、区）地图展示中心，用于 mock 点位和 GIS 下钻。 */
+export const REGION_CENTERS: Readonly<Record<string, { lng: number; lat: number }>> = {
+  右江区: { lng: 106.618, lat: 23.905 },
+  田阳区: { lng: 106.915, lat: 23.755 },
+  田东县: { lng: 107.126, lat: 23.597 },
+  德保县: { lng: 106.618, lat: 23.323 },
+  靖西市: { lng: 106.418, lat: 23.134 },
+  那坡县: { lng: 105.833, lat: 23.408 },
+  凌云县: { lng: 106.561, lat: 24.345 },
+  乐业县: { lng: 106.557, lat: 24.782 },
+  田林县: { lng: 106.228, lat: 24.292 },
+  西林县: { lng: 105.095, lat: 24.497 },
+  隆林县: { lng: 105.344, lat: 24.771 },
+  平果市: { lng: 107.59, lat: 23.323 },
+}
