@@ -1,5 +1,13 @@
 <template>
-  <div class="stat-card" :class="{ clickable: !!onClick }" @click="onClick">
+  <div
+    class="stat-card"
+    :class="{ clickable: !!onClick }"
+    :role="onClick ? 'button' : undefined"
+    :tabindex="onClick ? 0 : undefined"
+    @click="onClick"
+    @keydown.enter="onClick?.()"
+    @keydown.space.prevent="onClick?.()"
+  >
     <div v-if="icon" class="stat-icon" :style="{ backgroundColor: `${color}18` }">
       <el-icon :size="22" :color="color"><component :is="icon" /></el-icon>
     </div>
@@ -13,41 +21,53 @@
 <script setup lang="ts">
 /**
  * StatCard 统计卡片
- * @example <StatCard label="问题总数" :value="128" color="#2b7a4b" icon="Document" />
+ * @example <StatCard label="问题总数" :value="128" color="#1a5f2a" :icon="Document" />
  */
-defineProps<{
-  /** 卡片标题 */
-  label: string
-  /** 数值（可传 number 或 string，如 "12.5%"） */
-  value: number | string
-  /** 主题色（默认品牌绿） */
-  color?: string
-  /** Element Plus 图标组件名（如 Document / Warning） */
-  icon?: string
-  /** 点击回调（可选） */
-  onClick?: () => void
-}>()
+import type { Component } from 'vue'
+
+withDefaults(
+  defineProps<{
+    /** 卡片标题 */
+    label: string
+    /** 数值（可传 number 或 string，如 "12.5%"） */
+    value: number | string
+    /** 主题色（默认品牌绿） */
+    color?: string
+    /** 图标组件 */
+    icon?: Component
+    /** 点击回调（可选） */
+    onClick?: () => void
+  }>(),
+  { color: '#1a5f2a' },
+)
 </script>
 
 <style scoped lang="scss">
 .stat-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 8%);
+  gap: 13px;
+  min-width: 0;
+  min-height: 82px;
+  padding: 14px 16px;
+  background: #fafbf8;
+  border: 1px solid #e3e9e4;
+  border-radius: 9px;
 
   &.clickable {
     cursor: pointer;
     transition:
-      transform 0.15s,
-      box-shadow 0.15s;
+      background-color 0.18s ease,
+      border-color 0.18s ease;
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+      background: #fbfdfb;
+      border-color: #bfd3c3;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgb(26 95 42 / 20%);
+      outline-offset: 2px;
     }
   }
 }
@@ -56,21 +76,21 @@ defineProps<{
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   border-radius: 8px;
   flex-shrink: 0;
 }
 
 .stat-value {
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 700;
   line-height: 1.2;
 }
 
 .stat-label {
-  margin-top: 2px;
-  font-size: 13px;
-  color: #909399;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 </style>

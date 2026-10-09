@@ -37,8 +37,7 @@ withDefaults(
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e4e7ed;
+  min-height: 40px;
 
   .header-left {
     display: flex;
@@ -47,15 +46,17 @@ withDefaults(
   }
 
   .title {
+    margin: 0;
     font-size: 18px;
-    font-weight: 600;
-    color: #303133;
+    font-weight: 700;
+    line-height: 26px;
+    color: var(--color-text);
   }
 
   .breadcrumb {
     :deep(.el-breadcrumb__inner) {
       font-size: 12px;
-      color: #909399;
+      color: var(--color-text-muted);
     }
   }
 }

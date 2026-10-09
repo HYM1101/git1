@@ -22,27 +22,27 @@
   --el-color-primary-dark-2: #144a22;
 }
 
-// ── 2. 顶栏：深绿渐变 + 白字 ──
+// ── 2. 顶栏：米白表面（PC 视觉规范 3.3） ──
 .layout-header.layout-header {
-  background: linear-gradient(135deg, #0d3b1a 0%, #1a5f2a 55%, #2b7a4b 100%) !important;
-  border-bottom: none !important;
-  box-shadow: 0 2px 8px rgba(13, 59, 26, 0.25);
+  background: #fafbf8 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
 
   .title,
   .header-left .title {
-    color: #ffffff !important;
+    color: #1a1a2e !important;
   }
 
   .logo {
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+    filter: none;
   }
 
   .user-info,
   .header-right .user-info {
-    color: rgba(255, 255, 255, 0.92) !important;
+    color: #374151 !important;
 
     .el-icon {
-      color: rgba(255, 255, 255, 0.92) !important;
+      color: #6b7280 !important;
     }
   }
 }
@@ -55,32 +55,33 @@
   // 菜单深色主题
   .el-menu {
     --el-menu-bg-color: transparent;
-    --el-menu-text-color: rgba(255, 255, 255, 0.82);
-    --el-menu-active-color: #ffffff;
-    --el-menu-hover-bg-color: rgba(255, 255, 255, 0.1);
+    --el-menu-text-color: rgb(255 255 255 / 0.82);
+    --el-menu-active-color: #fff;
+    --el-menu-hover-bg-color: rgb(255 255 255 / 0.1);
     --el-menu-item-height: 46px;
+
     background: transparent !important;
     border-right: none !important;
 
     .el-menu-item {
       margin: 2px 8px;
-      border-radius: 6px;
-      color: rgba(255, 255, 255, 0.82);
+      border-radius: 8px;
+      color: rgb(255 255 255 / 0.82);
 
       .el-icon {
-        color: rgba(255, 255, 255, 0.72);
+        color: rgb(255 255 255 / 0.72);
       }
 
       &:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-        color: #ffffff;
+        background: rgb(255 255 255 / 0.1) !important;
+        color: #fff;
       }
 
       &.is-active {
-        background: rgba(255, 255, 255, 0.16) !important;
-        color: #ffffff;
+        background: rgb(255 255 255 / 0.16) !important;
+        color: #fff;
         font-weight: 600;
-        box-shadow: inset 3px 0 0 #fdd835;
+        box-shadow: inset 3px 0 0 #81c784;
       }
     }
   }
@@ -94,28 +95,167 @@
 // ── 5. 卡片：米白表面 + 柔和阴影（原 --surface） ──
 .el-card {
   --el-card-border-color: #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(16, 42, 24, 0.06);
+  --el-card-bg-color: #fafbf8;
+
+  border-radius: 12px;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 1px 3px rgb(0 0 0 / 0.02);
 }
 
 // ── 6. 表格：表头浅绿底 ──
 .el-table {
   --el-table-header-bg-color: #eef5ee;
   --el-table-header-text-color: #1a1a2e;
+
   border-radius: 8px;
 
   // 表头单元格直接设底色（覆盖按需引入下的默认 --el-fill-color-light）
   th.el-table__cell {
     background-color: #eef5ee !important;
+    font-weight: 600;
+  }
+
+  .el-table__cell {
+    padding: 10px 0;
+  }
+
+  .el-table__row:hover > .el-table__cell {
+    background-color: #f5f8f4;
   }
 }
 
 // ── 7. 按钮圆角与主色联动 ──
 .el-button {
-  border-radius: 6px;
+  border-radius: 8px;
+
+  &:focus-visible {
+    outline: 2px solid rgb(26 95 42 / 0.3);
+    outline-offset: 2px;
+  }
+}
+
+// 默认（次要）按钮对齐原版 .btn-secondary：米白表面 + 浅灰边框
+.el-button--default {
+  background-color: #fafbf8;
+  border-color: #e5e7eb;
+  color: #1a1a2e;
+
+  &:hover,
+  &:focus {
+    background-color: #f0f3ee;
+    border-color: #c8e6c9;
+    color: #1a1a2e;
+  }
+}
+
+// Tag 对齐原版 .tag：小圆角填充 pill
+.el-tag {
+  display: inline-flex;
+  align-items: center;
+  height: auto !important;
+  padding: 3px 10px !important;
+  font-family: Arial, Roboto, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  border: 0;
+  border-radius: 4px;
+
+  &.el-tag--success {
+    color: #fff;
+    background: #43a047;
+    box-shadow: 0 1px 3px rgb(67 160 71 / 0.25);
+  }
+
+  &.el-tag--warning {
+    color: #fff;
+    background: #fb8c00;
+    box-shadow: 0 1px 3px rgb(251 140 0 / 0.25);
+  }
+
+  &.el-tag--danger {
+    color: #fff;
+    background: #e53935;
+    box-shadow: 0 1px 3px rgb(229 57 53 / 0.25);
+  }
+
+  &.el-tag--info {
+    color: #6b7280;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+  }
+}
+
+.el-input__wrapper,
+.el-select__wrapper {
+  min-height: 38px;
+  border-radius: 8px;
 }
 
 // ── 8. 分页激活色 ──
 .el-pagination.is-background .el-pager li.is-active {
   background-color: var(--el-color-primary);
+}
+
+// ── 9. 弹窗：统一圆角、分区间距和遮罩 ──
+.el-overlay {
+  background-color: rgb(0 0 0 / 0.4);
+}
+
+.el-dialog {
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+
+  .el-dialog__header {
+    padding: 16px 20px;
+    margin: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .el-dialog__body {
+    padding: 20px;
+  }
+
+  .el-dialog__footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+// 脚本式确认框（录入清空、批量删除、退回整改）与原 HTML modal 卡片统一。
+.el-message-box {
+  width: min(420px, calc(100vw - 32px));
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+}
+
+.el-message-box__header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.el-message-box__content {
+  padding: 22px 20px;
+}
+
+.el-message-box__btns {
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.el-message-box__close {
+  color: var(--color-text-muted);
+}
+
+// ── 10. 空态与错误态：保持稳定高度 ──
+.el-empty {
+  padding: 48px 0;
+
+  .el-empty__description p {
+    color: var(--color-text-muted);
+  }
 }

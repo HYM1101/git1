@@ -40,7 +40,10 @@ const emit = defineEmits<{
 <style scoped lang="scss">
 .pagination-bar {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  margin-top: 16px;
+  min-height: 56px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border);
 }
 </style>

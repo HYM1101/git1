@@ -25,6 +25,7 @@ withDefaults(
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 0;
+  min-height: 220px;
+  padding: 48px 0;
 }
 </style>

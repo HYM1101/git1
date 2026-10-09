@@ -17,6 +17,7 @@ import {
   LegendComponent,
   TitleComponent,
   VisualMapComponent,
+  GraphicComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import type { EChartsCoreOption } from 'echarts/core'
@@ -32,6 +33,7 @@ echarts.use([
   LegendComponent,
   TitleComponent,
   VisualMapComponent,
+  GraphicComponent,
   CanvasRenderer,
 ])
 

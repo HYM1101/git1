@@ -26,16 +26,17 @@ withDefaults(
     /** 主题色 */
     color?: string
   }>(),
-  { color: '#2B7A4B' },
+  { color: '#1A5F2A' },
 )
 </script>
 
 <style scoped lang="scss">
 .stat-panel {
   border: 1px solid;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 12px;
+  padding: 16px 18px;
+  background: var(--color-surface);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
 
   .panel-header {
     display: flex;
@@ -53,7 +54,7 @@ withDefaults(
   .panel-label {
     font-size: 14px;
     font-weight: 600;
-    color: #303133;
+    color: var(--color-text);
     flex: 1;
   }
 

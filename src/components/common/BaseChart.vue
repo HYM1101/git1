@@ -54,6 +54,8 @@ const props = withDefaults(
 const chartRef = ref<HTMLDivElement>()
 let chart: ECharts | null = null
 let resizeObserver: ResizeObserver | null = null
+let renderFrame = 0
+let resizeFrame = 0
 
 function render(): void {
   if (!chartRef.value) return
@@ -64,7 +66,13 @@ function render(): void {
 }
 
 function handleResize(): void {
-  chart?.resize()
+  cancelAnimationFrame(resizeFrame)
+  resizeFrame = requestAnimationFrame(() => chart?.resize())
+}
+
+function scheduleRender(): void {
+  cancelAnimationFrame(renderFrame)
+  renderFrame = requestAnimationFrame(render)
 }
 
 onMounted(async () => {
@@ -76,9 +84,11 @@ onMounted(async () => {
   }
 })
 
-watch(() => props.option, render, { deep: true })
+watch(() => props.option, scheduleRender, { deep: true })
 
 onBeforeUnmount(() => {
+  cancelAnimationFrame(renderFrame)
+  cancelAnimationFrame(resizeFrame)
   resizeObserver?.disconnect()
   chart?.dispose()
   chart = null

@@ -7,6 +7,7 @@
       :on-change="handleChange"
       :on-remove="handleRemove"
       :file-list="fileList"
+      :disabled="disabled"
       drag
     >
       <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
@@ -44,6 +45,8 @@ const props = withDefaults(
     maxSizeMB?: number
     /** 最大文件数（默认 5） */
     limit?: number
+    /** 是否禁用选择与删除 */
+    disabled?: boolean
     /** 受控文件列表（v-model:file-list 或 v-model） */
     fileList?: { name: string; url?: string }[]
   }>(),
@@ -51,6 +54,7 @@ const props = withDefaults(
     accept: '.jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx',
     maxSize: 10 * 1024 * 1024,
     limit: 5,
+    disabled: false,
     fileList: () => [],
   },
 )

@@ -31,10 +31,16 @@ const emit = defineEmits<{
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 16px;
+  padding: 16px 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
 
   .filter-actions {
     display: flex;
     gap: 8px;
+    margin-left: auto;
   }
 }
 </style>
