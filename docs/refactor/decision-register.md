@@ -1,8 +1,8 @@
 # 前端改造决策登记
 
-更新日期：2026-08-25
+更新日期：2026-10-13
 
-本轮范围仅为 `ec-frontend/` PC 端。`demo4-standalone/` 与 `demo4-screen/` 冻结。
+本轮范围仅为 `ec-frontend/` PC 端。`demo4-standalone/`（指挥大屏）已并入本仓库；早期原型 `demo4-screen/` 已归档至 `_archive/demo4-screen-prototype/`。
 
 | 编号 | 当前状态 | 已知信息 / 临时处理 | 待确认负责人 | 截止条件 |
 |---|---|---|---|---|
